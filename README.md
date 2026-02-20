@@ -1,144 +1,124 @@
-# Faraday Web Research Agent 🕵️‍♀️
+# Faraday: An Autonomous Web Research Agent 🕵️‍♀️
 
-![Faraday Logo](Logo.png)
+![Faraday Logo](https://img.shields.io/badge/Faraday-Web-Researcher-Agent-brightgreen.svg)
+[![Release Version](https://img.shields.io/github/v/release/DennisDRX/Faraday-Web-Researcher-Agent)](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/releases)
 
-[![Python Version](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Framework](https://img.shields.io/badge/Framework-Streamlit-red.svg)](https://streamlit.io/)
-[![Orchestration](https://img.shields.io/badge/Orchestration-LangChain%20/%20LangGraph-purple.svg)](https://www.langchain.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Welcome to the **Faraday-Web-Researcher-Agent** repository! This project aims to provide an autonomous web research agent that efficiently investigates queries using various dynamic tools. With Faraday, you can gather information from multiple sources and synthesize structured reports using a user-friendly Streamlit interface.
 
-## ✨ Overview
+## Table of Contents
 
-Faraday is a comprehensive web research agent designed to investigate queries by **autonomously gathering and analyzing information** from multiple online sources. It uses a sophisticated agent powered by LLMs and LangGraph to dynamically select tools, conduct research, and synthesize findings, ultimately delivering a structured research report directly within a Streamlit interface.
+1. [Features](#features)
+2. [Technologies Used](#technologies-used)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Contributing](#contributing)
+6. [License](#license)
+7. [Contact](#contact)
 
-## 🚀 Features
+## Features
 
-- **🤖 Agentic Workflow**: Employs an AI agent orchestrated with LangGraph to manage the entire research process directly within Streamlit.
-- **🛠️ Dynamic Tool Selection**: The agent intelligently chooses the best tools (Search Engines, Web Scrapers, APIs) based on the query and intermediate findings.
-- **🔍 Multi-source Evidence Collection**: Gathers information from diverse sources using tools like Tavily, Google Search (via Gemini), DuckDuckGo, Wikidata, NewsAPI, and Firecrawl.
-- **🧩 Query Decomposition**: Can break down complex queries into simpler, searchable sub-questions using LLMs.
-- **📝 Structured Reporting**: Synthesizes findings into a well-organized report with a summary, detailed sections, and source attribution.
-- **🔗 Source Attribution**: Transparently lists all sources consulted and the tools used to access them.
-- **🖥️ Modern Dark Mode Interface**: Clean, user-friendly Streamlit interface for interaction and result presentation.
+- **Autonomous Web Research**: Faraday uses tools like Tavily, Google, and NewsAPI to fetch relevant information.
+- **Dynamic Tool Integration**: Easily extendable to incorporate new tools as needed.
+- **Structured Reporting**: Synthesizes information into clear, organized reports.
+- **User-Friendly Interface**: Built with Streamlit for an intuitive user experience.
+- **Agentic Workflow**: Automates the research process while allowing for manual adjustments.
+- **Source Tracking**: Keeps track of all sources for transparency and verification.
 
-## 🏗️ System Architecture
+## Technologies Used
 
-Faraday leverages an **agentic architecture**, orchestrated using LangGraph, running directly within the Streamlit application. Instead of a fixed pipeline, a central **Web Research Agent** dynamically plans and executes tasks using a suite of available tools:
+Faraday utilizes a variety of technologies to deliver its features:
 
-```mermaid
-graph TD
-    user([User])
-    app[Streamlit App]
-    agent[LangGraph Agent]
-    llm1[Primary LLM: Decision Making]
-    llm2[Parser LLM: Gemini Output Parsing]
-    
-    subgraph tools[Tools]
-        t1[Tavily Search]
-        t2[DuckDuckGo Search]
-        t3[Gemini Search Tool]
-        t4[Firecrawl Scrape Tool]
-        t5[News API Tool]
-        t6[Wikidata Search Tool]
-        t7[Query Decomposition Tool]
-        t8[FINISH Signal]
-    end
-    
-    subgraph sources[External Sources]
-        s1[Websites]
-        s2[APIs/Databases]
-    end
-    
-    report[(Research Report Schema)]
-    
-    user --> |Inputs Query| app
-    app --> |Invokes Agent Directly| agent
-    agent --> |Reasoning & Tool Selection| llm1
-    agent --> |Parses Specific Outputs| llm2
-    agent --> |Tool Invocation| tools
-    tools --> |Data Retrieval| sources
-    sources --> |Returns Data| tools
-    tools --> |Observations| agent
-    agent --> |Synthesizes Report| report
-    agent --> |Returns Report/Error| app
-    app --> |Displays Report| user
+- **LangGraph**: For natural language processing and understanding.
+- **Streamlit**: For creating the web interface.
+- **Python**: The primary programming language used.
+- **APIs**: Integration with tools like Tavily, Google, and NewsAPI.
+- **LLM**: Large Language Models for enhanced research capabilities.
 
-```
+## Installation
 
-*This diagram represents a high-level overview of the simplified system components and their interactions, driven by the agent's dynamic workflow within Streamlit.*
+To set up Faraday on your local machine, follow these steps:
 
-## ⚙️ How the System Works (Agentic Flow)
+1. **Clone the Repository**:
 
-The web research process is driven by the agent's autonomous reasoning within the LangGraph framework, executed within the Streamlit app:
+   ```bash
+   git clone https://github.com/DennisDRX/Faraday-Web-Researcher-Agent.git
+   ```
 
-1.  **User Input**: A user submits a research query via the Streamlit UI (`app.py`).
-2.  **Agent Execution**: The Streamlit app directly invokes the LangGraph agent (`run_web_research`) with the query:
-    *   The agent analyzes the query and decides the next best action (e.g., decompose query, search the web, scrape a page).
-    *   It invokes the appropriate tool with specific inputs.
-    *   It processes the tool's observation (output) and updates its internal state.
-    *   This cycle continues (Agent -> Tool -> Agent) until the agent determines it has gathered sufficient information.
-3.  **Final Synthesis**: Once the agent decides to finish, it synthesizes all gathered information and structured observations into a `ResearchReport` or `ErrorResponse` object.
-4.  **Presentation**: The final report or error message is returned to the Streamlit app and presented directly to the user in the UI.
+2. **Navigate to the Directory**:
 
-## 🚀 Getting Started
+   ```bash
+   cd Faraday-Web-Researcher-Agent
+   ```
 
-### Prerequisites
+3. **Install Required Packages**:
 
-- Python 3.8+
-- Required API keys stored securely (e.g., in a `.env` file) for the tools you intend to use (e.g., OpenAI, Google AI, Tavily, NewsAPI, Firecrawl).
+   Use pip to install the necessary Python packages:
 
-### Installation
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-1.  Clone the repository:
-    ```bash
-    git clone <repository_url>
-    cd <repository_directory>
-    ```
-2.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  Set up environment variables by creating a `.env` file in the root directory with your API keys.
+4. **Run the Application**:
 
-### Running the Application
+   Start the Streamlit application:
 
-1.  Start the Streamlit application:
-    ```bash
-    streamlit run app.py
-    ```
-    The app will usually be available at `http://localhost:8501`.
+   ```bash
+   streamlit run app.py
+   ```
 
-## 🤔 Example Queries to Try
+You can also check the [Releases](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/releases) section for downloadable files and instructions.
 
-Challenge the agent with various research queries:
+## Usage
 
-- "What are the latest advancements in renewable energy technology?"
-- "Explain the concept of large language models and their applications."
-- "Compare and contrast the economic impacts of Brexit on the UK and the EU."
-- "Provide a brief history of the internet."
+Once the application is running, you can access it via your web browser. The interface allows you to enter queries, select tools, and view the synthesized reports. Here’s how to get started:
 
-## 🔌 API Usage
+1. **Enter Your Query**: Type in the topic or question you want to research.
+2. **Select Tools**: Choose from the available tools to gather information.
+3. **View Reports**: After processing, view the structured report generated by Faraday.
 
-(The separate API endpoint is no longer applicable as the logic is integrated into the Streamlit app.)
+For more detailed instructions and examples, please refer to the documentation in the repository.
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! If you have suggestions, bug reports, or want to add new tools or features, please feel free to:
+We welcome contributions to improve Faraday! If you have suggestions or would like to add features, please follow these steps:
 
-1.  Open an issue to discuss the change.
-2.  Fork the repository.
-3.  Create a new branch (`git checkout -b feature/YourFeature`).
-4.  Make your changes.
-5.  Commit your changes (`git commit -m 'Add some feature'`).
-6.  Push to the branch (`git push origin feature/YourFeature`).
-7.  Open a Pull Request.
+1. **Fork the Repository**.
+2. **Create a New Branch**: 
 
-## 📜 License
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
 
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+3. **Make Your Changes**.
+4. **Commit Your Changes**:
 
-## 🙏 Acknowledgments
+   ```bash
+   git commit -m "Add Your Feature"
+   ```
 
-- Built with ❤️ using [Python](https://www.python.org/), [Streamlit](https://streamlit.io/), and [LangChain/LangGraph](https://www.langchain.com/).
-- Leverages powerful APIs and tools from [Tavily AI](https://tavily.com/), [Google AI (Gemini)](https://ai.google.dev/), [DuckDuckGo](https://duckduckgo.com/), [Firecrawl](https://firecrawl.dev/), [NewsAPI](https://newsapi.org/), [Wikidata](https://www.wikidata.org/), and others.
-- Inspired by the need for effective and automated information gathering. 
+5. **Push to Your Branch**:
+
+   ```bash
+   git push origin feature/YourFeature
+   ```
+
+6. **Create a Pull Request**.
+
+Please ensure your code adheres to the project's coding standards and includes appropriate tests.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+## Contact
+
+For questions or feedback, please reach out to the project maintainer:
+
+- **DennisDRX**
+- [GitHub Profile](https://github.com/DennisDRX)
+
+You can also check the [Releases](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/releases) section for the latest updates and files.
+
+---
+
+Thank you for your interest in Faraday! We hope this tool makes your web research more efficient and effective. Happy researching!
