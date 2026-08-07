@@ -78,6 +78,21 @@ Once the application is running, you can access it via your web browser. The int
 
 For more detailed instructions and examples, please refer to the documentation in the repository.
 
+## Security Notes for Public Deployments
+
+Faraday can run as a Streamlit app or through the FastAPI research endpoint. If
+you expose either service on a network, treat submitted research queries and
+retrieved web page content as untrusted input.
+
+- Add authentication and rate limiting before exposing the app publicly.
+- Keep outbound firewall rules restrictive for production deployments.
+- Firecrawl scraping validates URLs and blocks localhost, private, reserved, and
+  link-local targets by default to reduce SSRF risk.
+- Set `ALLOW_FIRECRAWL_SCRAPE=false` to remove the Firecrawl scraping tool from
+  the agent tool registry unless page scraping is explicitly needed.
+- Do not set `ALLOW_PRIVATE_SCRAPE_TARGETS=true` outside isolated development
+  environments.
+
 ## Contributing
 
 We welcome contributions to improve Faraday! If you have suggestions or would like to add features, please follow these steps:
