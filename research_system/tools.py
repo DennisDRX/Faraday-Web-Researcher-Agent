@@ -5,7 +5,11 @@ used by the Web Research Agent system, refactored as Langchain Tools.
 
 import logging
 import json
+import ipaddress
+import os
+import socket
 from typing import List, Dict, Any, Optional, Type
+from urllib.parse import urlparse
 import requests
 from . import config
 
@@ -33,6 +37,66 @@ from google.genai import types
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+MAX_TOOL_QUERY_LENGTH = int(os.getenv("MAX_TOOL_QUERY_LENGTH", "500"))
+ALLOW_FIRECRAWL_SCRAPE = os.getenv("ALLOW_FIRECRAWL_SCRAPE", "true").lower() in {"1", "true", "yes", "on"}
+ALLOW_PRIVATE_SCRAPE_TARGETS = os.getenv("ALLOW_PRIVATE_SCRAPE_TARGETS", "false").lower() in {"1", "true", "yes", "on"}
+
+
+def _clean_tool_query(query: str, *, label: str = "query") -> str:
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError(f"{label} must be a non-empty string.")
+
+    cleaned = " ".join(query.split())
+    if len(cleaned) > MAX_TOOL_QUERY_LENGTH:
+        raise ValueError(f"{label} exceeds {MAX_TOOL_QUERY_LENGTH} characters.")
+
+    return cleaned
+
+
+def _is_blocked_ip(ip) -> bool:
+    return (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    )
+
+
+def _validate_public_http_url(raw_url: str) -> str:
+    if not isinstance(raw_url, str) or not raw_url.strip():
+        raise ValueError("URL must be a non-empty string.")
+
+    parsed = urlparse(raw_url.strip())
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("Only http and https URLs can be scraped.")
+    if not parsed.hostname:
+        raise ValueError("URL must include a hostname.")
+    if parsed.username or parsed.password:
+        raise ValueError("URLs with embedded credentials are not allowed.")
+
+    hostname = parsed.hostname.strip().rstrip(".")
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if not ALLOW_PRIVATE_SCRAPE_TARGETS and _is_blocked_ip(ip):
+            raise ValueError("Private, local, reserved, and link-local scrape targets are not allowed.")
+    except ValueError as exc:
+        if "not allowed" in str(exc):
+            raise
+        try:
+            resolved = socket.getaddrinfo(hostname, parsed.port or None, proto=socket.IPPROTO_TCP)
+        except socket.gaierror as dns_error:
+            raise ValueError(f"Unable to resolve URL hostname: {hostname}") from dns_error
+
+        for result in resolved:
+            address = result[4][0]
+            ip = ipaddress.ip_address(address)
+            if not ALLOW_PRIVATE_SCRAPE_TARGETS and _is_blocked_ip(ip):
+                raise ValueError("Private, local, reserved, and link-local scrape targets are not allowed.")
+
+    return raw_url.strip()
 
 # --- Internal Helper Functions ---
 def parse_gemini_output_with_llm(gemini_raw_text: str, query: str) -> Optional[Dict[str, Any]]:
@@ -207,6 +271,8 @@ def tavily_search(query: str, max_results: int = 5) -> Dict[str, Any]:
         logger.error("Tavily client is not available.")
         return {"error": "Tavily client unavailable."}
     try:
+        query = _clean_tool_query(query)
+        max_results = max(1, min(int(max_results), 10))
         logger.info(f"Performing Tavily search for query: '{query}'")
         response = tavily_client.search(query=query, search_depth="advanced", max_results=max_results)
         if isinstance(response, list):
@@ -229,11 +295,17 @@ def firecrawl_scrape_tool(url: str) -> Dict[str, Any]:
     Provides clean Markdown suitable for analysis.
     """
     logger.info(f"Attempting to scrape URL with Firecrawl: {url}")
-    firecrawl_client = config.get_firecrawl_client()
-    if not firecrawl_client:
-        logger.error("Firecrawl client is not available.")
-        return {"error": "Firecrawl client unavailable."}
+    if not ALLOW_FIRECRAWL_SCRAPE:
+        logger.warning("Firecrawl scraping is disabled by configuration.")
+        return {"url": url, "error": "Firecrawl scraping is disabled by configuration."}
+
     try:
+        url = _validate_public_http_url(url)
+        firecrawl_client = config.get_firecrawl_client()
+        if not firecrawl_client:
+            logger.error("Firecrawl client is not available.")
+            return {"error": "Firecrawl client unavailable."}
+
         # Firecrawl returns a list of pages, even for single URLs. Take the first result.
         result = firecrawl_client.scrape_url(url)
         if result and isinstance(result, list) and result[0]:
@@ -261,6 +333,8 @@ def news_search(query: str, language: str = 'en', page_size: int = 10) -> Dict[s
         logger.error("NewsAPI client is not available.")
         return {"error": "NewsAPI client unavailable."}
     try:
+        query = _clean_tool_query(query)
+        page_size = max(1, min(int(page_size), 25))
         logger.info(f"Performing NewsAPI search for query: '{query}', lang: {language}, size: {page_size}")
         # Use get_everything for broader search, or top_headlines for major news
         response = news_client.get_everything(
@@ -306,6 +380,8 @@ def duckduckgo_search(query: str, max_results: int = 5) -> List[Dict[str, str]]:
     """
     logger.info(f"Performing DuckDuckGo search for query: '{query}'")
     try:
+        query = _clean_tool_query(query)
+        max_results = max(1, min(int(max_results), 10))
         # DuckDuckGoSearchRun directly returns a list of dicts
         ddg_search = DuckDuckGoSearchAPIWrapper(region="us-en", max_results=max_results)
         results = ddg_search.results(query, max_results=max_results)
@@ -327,6 +403,7 @@ def wikidata_entity_search(query: str) -> Dict[str, Any]:
     """
     logger.info(f"Performing Wikidata search for entity: '{query}'")
     try:
+        query = _clean_tool_query(query)
         wikidata_wrapper = WikidataAPIWrapper()
         tool = WikidataQueryRun(api_wrapper=wikidata_wrapper)
         # The run method returns a string, need to parse it potentially
@@ -358,6 +435,7 @@ def _gemini_google_search_and_parse_internal(query: str) -> Dict[str, Any]:
     final_output: Dict[str, Any] = {"query": query, "source_tool": "GeminiGoogleSearch"}
 
     try:
+        query = _clean_tool_query(query)
         # --- Call the config.py function to perform the search --- 
         # Returns {"text": str, "source_urls": List[str], "error": Optional[str]}
         gemini_result = config.perform_gemini_google_search(query)
@@ -450,12 +528,14 @@ def create_agent_tools(cfg: Optional[Dict] = None) -> List[BaseTool]:
     Based on provided configuration.
     """
     logger.info("Creating agent tools...")
+    cfg = cfg or {}
+    enable_firecrawl = cfg.get("allow_firecrawl_scrape", ALLOW_FIRECRAWL_SCRAPE)
+
     tools: List[BaseTool] = [
         # Initialize standard tools
         # Remove FirecrawlInput as it's likely just a schema, not an executable tool
         # FirecrawlInput,
         tavily_search,
-        firecrawl_scrape_tool,
         news_search,
         duckduckgo_search,
         wikidata_entity_search,
@@ -463,5 +543,7 @@ def create_agent_tools(cfg: Optional[Dict] = None) -> List[BaseTool]:
         gemini_google_search_tool,
         FINISH # Include the FINISH tool
     ]
+    if enable_firecrawl:
+        tools.insert(1, firecrawl_scrape_tool)
     logger.info(f"Created {len(tools)} tools.")
     return tools
