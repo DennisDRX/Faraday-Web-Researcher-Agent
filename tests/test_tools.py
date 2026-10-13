@@ -14,7 +14,11 @@ if project_root not in sys.path:
 # --- End: Add project root to sys.path ---
 
 # Now import the function to test and related schemas/exceptions
-from research_system.tools import _gemini_google_search_and_parse_internal
+from research_system.tools import (
+    _gemini_google_search_and_parse_internal,
+    _validate_public_http_url,
+    create_agent_tools,
+)
 # Import config to ensure environment variables are loaded (if using dotenv in config)
 from research_system import config
 from research_system.schemas import GeminiParsedOutput, ErrorResponse
@@ -24,6 +28,43 @@ from research_system.schemas import GeminiParsedOutput, ErrorResponse
 # Configure basic logging for the test
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+class TestNetworkToolGuards(unittest.TestCase):
+    """Unit tests for network tool safety checks."""
+
+    def test_validate_public_http_url_allows_public_https(self):
+        self.assertEqual(
+            _validate_public_http_url("https://example.com/research"),
+            "https://example.com/research",
+        )
+
+    def test_validate_public_http_url_rejects_localhost(self):
+        with self.assertRaises(ValueError):
+            _validate_public_http_url("http://localhost:8000/admin")
+
+    def test_validate_public_http_url_rejects_loopback_ip(self):
+        with self.assertRaises(ValueError):
+            _validate_public_http_url("http://127.0.0.1:8000/admin")
+
+    def test_validate_public_http_url_rejects_private_ip(self):
+        with self.assertRaises(ValueError):
+            _validate_public_http_url("http://192.168.1.10/status")
+
+    def test_validate_public_http_url_rejects_metadata_ip(self):
+        with self.assertRaises(ValueError):
+            _validate_public_http_url("http://169.254.169.254/latest/meta-data/")
+
+    def test_validate_public_http_url_rejects_non_http_scheme(self):
+        with self.assertRaises(ValueError):
+            _validate_public_http_url("file:///etc/passwd")
+
+    def test_firecrawl_can_be_removed_from_tool_registry(self):
+        tools = create_agent_tools({"allow_firecrawl_scrape": False})
+        tool_names = {tool.name for tool in tools}
+
+        self.assertNotIn("firecrawl_scrape_tool", tool_names)
+        self.assertIn("tavily_search", tool_names)
 
 @unittest.skipIf(not config.GEMINI_API_KEY or not config.AZURE_OPENAI_API_KEY_ALT, "API keys for Gemini and Azure Parser LLM must be set for integration test")
 class TestGeminiSearchToolIntegration(unittest.TestCase):
